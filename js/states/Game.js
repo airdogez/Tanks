@@ -1,158 +1,123 @@
-Game = function(){};
+Game = function(game){
+	this.speed =0;
+	this.fireRate = 100;
+	this.tanks = [];
+	this.nextFire = 0;
+	this.bullets = null;
+}
 
-Game.prototype = {
-  create:function(){
+Game.prototype ={
+	create:function(){
+		this.world.setBounds(-1000,-1000,2000,2000);
+		this.land = this.add.tileSprite(0,0,800,600,'land');
 
-    this.background = this.add.tileSprite(0,0,this.world.width,this.world.height,'background');
-    this.background.tileScale.y =2;
-    this.worldSpeed = 200;
-    this.isJumping = false;
-    this.jumpPeaked = false;
-    this.maxJumpDistance = 120;
-    this.background.autoScroll(-this.worldSpeed,0);
-    this.player = this.add.sprite(50,140,'player');
-    this.player.anchor.setTo(0.5,0.5);
-    this.player.animations.add('running',[0,1,2,3,2,1], 
-      15 , true);
-    this.player.play('running');
-    this.physics.startSystem(Phaser.Physics.ARCADE);
+		this.tank = this.add.sprite(0,0,'tank','tank1');
+		this.tank.anchor.setTo(0.5,0.5);
+		this.tank.x = 400;
+		this.tank.y = 300;
+		this.tank.life = 5;
+		this.tank.is_dead = false;
+		
+		this.physics.enable(this.tank,Phaser.Physics.ARCADE);
+		this.tank.body.collideWorldBounds = true;
+		this.canon = this.add.sprite(0,0,'tank','turret');
+		this.canon.anchor.setTo(0.3,0.5);
+		this.canon.x = this.tank.x;
+		this.canon.y = this.tank.y;
+		this.keys = this.input.keyboard.createCursorKeys();
+		
+		this.camera.follow(this.tank);
+		this.land.fixedToCamera = true;
 
-    this.physics.arcade.gravity.y = 1000;
+		this.bullets = this.add.group();
+        this.bullets.enableBody = true;
+        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.bullets.createMultiple(30, 'bullet', 0, false);
+        this.bullets.setAll('anchor.x', 0.5);
+        this.bullets.setAll('anchor.y', 0.5);
+        this.bullets.setAll('outOfBoundsKill', true);
+        this.bullets.setAll('checkWorldBounds', true);
+        
+        this.enemyBullets = this.add.group();
+        this.enemyBullets.enableBody = true;
+        this.enemyBullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.enemyBullets.createMultiple(100,'bullet',0,false);
+        
+        this.enemyBullets.setAll('anchor.x', 0.5);
+        this.enemyBullets.setAll('anchor.y', 0.5);
+        this.enemyBullets.setAll('outOfBoundsKill', true);
+        this.enemyBullets.setAll('checkWorldBounds', true);
+        
+                
+	    for (var i = 0; i < 20; i++)
+	    {
+	        this.tanks.push(new Tank(i, this, this.tank, this.enemyBullets));
+	    }
+	},
+	update:function(){
 
-    this.physics.arcade.enable(this.player);
-    this.player.body.setSize(38,60,0,0);
-    //this.player.body.allowGravity = false;
+		this.canon.rotation = this.physics.arcade.angleToPointer(this.canon);
+		if(this.keys.left.isDown){
+			this.tank.angle -= 4;
+		}
+		if(this.keys.right.isDown){
+			this.tank.angle += 4;
+		}
+		if(this.keys.up.isDown){
+			this.speed = 200;
+		}else{
+			this.speed -= 4;
+		}
+		if(this.speed>0){
+			this.physics.arcade.velocityFromRotation(this.tank.rotation,
+											this.speed,this.tank.body.velocity);
+		}
+		if(this.input.activePointer.isDown){
+			this.fire();
+		}
+		this.canon.x= this.tank.x;
+		this.canon.y= this.tank.y;
+		this.land.tilePosition.x = -this.camera.x;
+		this.land.tilePosition.y = -this.camera.y;
 
-    this.water = this.add.tileSprite(0,this.world.height-30,
-      this.world.width,this.world.height,
-      'water');
-    this.water.autoScroll(-this.worldSpeed/2,0);
+		for(var i = 0;i<this.tanks.length;i++){
+			this.tanks[i].update();
+			this.physics.arcade.collide(this.tank,this.tanks[i].tank);
+			this.physics.arcade.overlap(this.bullets,this.tanks[i].tank,
+							this.hitEnemy,null,this);
+		}
+		this.physics.arcade.overlap(this.enemyBullets, 
+									this.tank,this.hitPlayer, null, this);
 
-    this.cursors = this.input.keyboard.createCursorKeys();
+	},
+	hitPlayer:function(tank ,bullet){
+		tank.life --;
+		if(tank.life == 0){
+			tank.kill();
+			this.canon.kill();
+			tank.is_dead = true;
+			//this.shadow.kill();
+		}
+		bullet.kill();
 
-    this.floorPool = this.add.group();
-    this.platformPool = this.add.group();
+	},
 
-    this.currentPlatform = new Platform(
-      this.game,this.floorPool,12,0,200,-this.worldSpeed);
+	hitEnemy:function(tank, bullet){
+		bullet.kill();
+		this.tanks[tank.name]._kill();
+	},
 
-    this.platformPool.add(this.currentPlatform);
 
-  },
-  update:function(){
+	fire:function(){
+		if (this.time.now > this.nextFire)
+	    {
+	        this.nextFire = this.time.now + this.fireRate;
 
-    if(this.player.alive){
-      this.platformPool.forEachAlive(function(platform, index){
-        this.game.physics.arcade.collide(this.player,platform);
-        if(platform.length && platform.children[platform.length-1].right<0){
-          platform.kill();
-        }
-      },this);
+	        var bullet = this.bullets.getFirstExists(false);
 
-      if(this.player.body.touching.down){
-        this.player.body.velocity.x = this.worldSpeed;
-      }else{
-        this.player.body.x = 0;
-      }
-      if(this.cursors.up.isDown || 
-        this.game.input.activePointer.isDown){
-        this.playerJump();
-        }else if(this.cursors.up.isUp ||
-        this.game.input.activePointer.isUp
-        ){
-          this.isJumping = false;
-        }
+	        bullet.reset(this.canon.x, this.canon.y);
+	        bullet.rotation = this.physics.arcade.moveToPointer(bullet, 1000, this.input.activePointer);
+	    }
+	}
 
-        if(this.currentPlatform.length && 
-          this.currentPlatform.children[this.currentPlatform.length-1].right < this.game.world.width){
-          this.createPlatform();
-          }
-          if(this.player.top >= this.world.height){
-            this.gameOver();
-          }
-    }
-  },
-  gameOver:function(){
-    this.player.kill();
-    this.overlay = this.add.bitmapData(this.game.width, this.game.height);
-    this.overlay.ctx.fillStyle = "#000";
-    this.overlay.ctx.fillRect(0,0,this.game.width, this.game.height);
-
-    this.panel = this.add.sprite(0,0,this.overlay);
-    this.panel.alpha  =0.5;
-    this.btn = this.add.button(this.game.width/2, this.game.height/2+100,
-      'facebook_share',this.share,this);
-    this.btn.anchor.setTo(0.5,0.5);
-  },
-  share:function(){
-    FB.ui(
-      {
-        method: 'feed',
-        link: 'https://developers.facebook.com/docs/',
-        name: 'Mi gran demo',
-        caption: 'Esto es mi test',
-        description: 'Obtuve un puntaje de '
-    },function(response){});
-
-  },
-  playerJump:function(){
-    if(this.player.body.touching.down){
-      this.startJumpY = this.player.y;
-      this.isJumping = true;
-      this.jumpPeaked = false;
-      this.player.body.velocity.y = -300;
-    }else if(this.isJumping && !this.jumpPeaked){
-      var distanceJumped = this.startJumpY-this.player.y;
-      if(distanceJumped<= this.maxJumpDistance){
-        this.player.body.velocity.y = -300;
-      }else{
-        this.jumpPeaked = true;
-      }
-    }
-  },
-  loadLevel:function(){
-    this.createPlatform();
-  },
-  createPlatform:function(){
-    var nextPlatform = this.generateRandomPlatform();
-    if(nextPlatform){
-      this.currentPlatform = this.platformPool.getFirstDead();
-      if(!this.currentPlatform){
-        this.currentPlatform = new Platform(
-          this.game,this.floorPool,nextPlatform.numTiles,
-          this.game.world.width + nextPlatform.separation, 
-          nextPlatform.y,
-          -this.worldSpeed);
-      }else{
-        this.currentPlatform.prepare(nextPlatform.numTiles,
-          this.game.world.width + nextPlatform.separation, 
-          nextPlatform.y,
-          -this.worldSpeed);
-
-      }
-      this.platformPool.add(this.currentPlatform);
-    }
-  },
-  generateRandomPlatform:function(){
-    var data = {};
-    var minSeparation = 60;
-    var maxSperation = 200;
-
-    data.separation = minSeparation + Math.random()*(maxSperation-minSeparation);
-    var minDifY = -120;
-    var maxDifY = 120;
-
-    data.y = this.currentPlatform.children[0].y + minDifY+ Math.random()*(maxDifY-minDifY);
-    data.y = Math.max(150,data.y);
-    data.y = Math.min(this.world.height-50,data.y);
-
-    var minTiles = 1;
-    var maxTiles = 5;
-
-    data.numTiles = minTiles + Math.random()*(maxTiles-minTiles);
-    return data;
-  },
-  render:function(){
-    //this.game.debug.body(this.player);
-  }
-};
+}
