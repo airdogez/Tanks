@@ -1,7 +1,7 @@
 /*
  *TODO:
  **Make the game end
- **Add Time
+ **Add Time correctly
  **Add Enemy Waves
  */
 
@@ -34,25 +34,34 @@
      this.tank.life = 3;
      this.tank.is_dead = false;
 
-     this.livesText =  this.add.text(0,0, 'Lives:', fontStyleHeader);
+     this.livesText =  this.add.text(100,35, 'Lives:', fontStyleHeader);
      this.livesText.anchor.setTo(0.5,0.5);
+     this.livesText.fixedToCamera = true;
      var i = 0;
      this.lives = this.add.group();
      for (i = 0; i < 3 ; i++) {
        this.heart = this.add.sprite(0,0,'live');
-       this.heart.x = 100 + 40*i;
-       this.heart.y = 20; 
+       this.heart.x = 155 + 40*i;
+       this.heart.y = 35;
        this.heart.width = this.heart.height = 30;
+       this.heart.anchor.setTo(0.5,0.5);
        this.lives.add(this.heart);
      }
+     this.lives.fixedToCamera = true;
 
-     this.scoreText = this.add.text(0, 0,'Score:', fontStyleHeader);
+     this.scoreText = this.add.text(350, 35,'Score:', fontStyleHeader);
      this.scoreText.anchor.setTo(0.5,0.5);
-     this.scoreTotal = this.add.text(0,0,this.score, fontStyleText);
+     this.scoreText.fixedToCamera = true;
+     this.scoreTotal = this.add.text(420,35,this.score, fontStyleText);
      this.scoreTotal.anchor.setTo(0.5,0.5);
+     this.scoreTotal.fixedToCamera = true;
 
-     this.timeText = this.add.text(0,0,'Time:', fontStyleHeader);
-     this.timerText = this.add.text(0,0,'00:00', fontStyleText);
+     this.timeText = this.add.text(600,35,'Time:', fontStyleHeader);
+     this.timeText.fixedToCamera = true; 
+     this.timeText.anchor.setTo(0.5,0.5);
+     this.timerText = this.add.text(680,35,'00:00', fontStyleText);
+     this.timerText.fixedToCamera = true;
+     this.timerText.anchor.setTo(0.5,0.5);
 
      this.physics.enable(this.tank,Phaser.Physics.ARCADE);
      this.tank.body.collideWorldBounds = true;
@@ -123,23 +132,7 @@
      this.land.tilePosition.x = -this.camera.x;
      this.land.tilePosition.y = -this.camera.y;
 
-     this.scoreTotal.text = score;
-
-     if(this.tank.x < this.world.width - 300 || this.tank.x > 300 && this.tank.y < this.world.height - 300 || this.tank.y > 300){
-       this.scoreText.x = this.tank.x +200;
-       this.livesText.x = this.tank.x -300;
-       this.lives.x = this.tank.x -350;
-       this.scoreText.y = this.tank.y -250;
-       this.livesText.y = this.tank.y -250;
-       this.lives.y = this.tank.y -285;
-       this.timeText.x = this.tank.x - 50;
-       this.timeText.y = this.tank.y - 250;
-       this.timerText.x = this.tank.x;
-       this.timerText.y = this.tank.y - 250;
-       this.scoreTotal.x = this.tank.x + 250;
-       this.scoreTotal.y = this.tank.y -300;
-     }
-
+     this.scoreTotal.text = this.score;
 
      for(var i = 0;i<this.tanks.length;i++){
        this.tanks[i].update();
