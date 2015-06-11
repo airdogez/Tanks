@@ -1,0 +1,17 @@
+GameOver = function (game) {
+
+};
+
+GameOver.prototype = {
+  preload: function () {
+    this.backgroud = this.add.tileSprite(0,0,800,600, 'land');
+    var fontStyle1 = {font:'bold 62px Arial', fill:'#4F3F3F', stroke: "#222", strokeThickness: 5};
+    this.OverText = this.add.text(200,200,'GAME OVER', fontStyle1);
+    this.retryBtn = this.add.button(0,0, 'retry', this.retryGame, this);
+
+  },
+
+  retryGame: function (){
+    this.state.start('Menu');
+  }
+  };

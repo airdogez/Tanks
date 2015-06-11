@@ -27,7 +27,7 @@ Tank = function(index,game, player,bullets){
     this.tank.body.bounce.setTo(1, 1);
 
     this.tank.angle = game.rnd.angle();
-    this.game.physics.arcade.velocityFromRotation(this.tank.rotation,100, this.tank.body.velocity)
+    this.game.physics.arcade.velocityFromRotation(this.tank.rotation,100, this.tank.body.velocity);
 
 };
 Tank.prototype._kill = function(){
@@ -43,7 +43,7 @@ Tank.prototype.update = function(){
     this.shadow.rotation = this.tank.rotation;
     if(!this.player.is_dead){
         this.turret.rotation = this.game.physics.arcade.angleBetween(this.turret,this.player);
-        if(this.game.physics.arcade.distanceBetween(this.tank, this.player) < 300){
+        if(this.game.physics.arcade.distanceBetween(this.tank, this.player) < 200){
             if(this.game.time.now > this.nextFire && 
                 this.bullets.countDead()>0){
                 this.nextFire = this.game.time.now+ this.fireRate;
