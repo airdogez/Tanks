@@ -22,13 +22,9 @@ Instructions.prototype = {
      this.integrantesText4 = this.add.text(50, 520, '\t -Renzo Villavisencio', fontStyleText);
 
      this.startBtn = this.add.button(350, 420, 'start-btn', this.startGame, this, 1,0,2);
-     this.backBtn = this.add.button(350, 500, 'back-btn', this.backBtn, this, 1,0,2);
 
   },
   startGame:function(){
     this.state.start('Game');
-  },
-  backBtn: function () {
-    this.state.start('Menu');
   }
 };

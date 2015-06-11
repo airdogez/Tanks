@@ -1,9 +1,8 @@
 /*
  *TODO:
- **Add HUD
  **Make the game end
- **Add Score
  **Add Time
+ **Add Enemy Waves
  */
 
  Game = function(game){
@@ -49,7 +48,8 @@
 
      this.scoreText = this.add.text(0, 0,'Score:', fontStyleHeader);
      this.scoreText.anchor.setTo(0.5,0.5);
-     this.scoreTotalText = 0;
+     this.scoreTotal = this.add.text(0,0,this.score, fontStyleText);
+     this.scoreTotal.anchor.setTo(0.5,0.5);
 
      this.timeText = this.add.text(0,0,'Time:', fontStyleHeader);
      this.timerText = this.add.text(0,0,'00:00', fontStyleText);
@@ -68,7 +68,7 @@
      this.bullets = this.add.group();
      this.bullets.enableBody = true;
      this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-     this.bullets.createMultiple(30, 'bullet', 0, false);
+     this.bullets.createMultiple(20, 'bullet', 0, false);
      this.bullets.setAll('anchor.x', 0.5);
      this.bullets.setAll('anchor.y', 0.5);
      this.bullets.setAll('outOfBoundsKill', true);
@@ -84,11 +84,8 @@
      this.enemyBullets.setAll('outOfBoundsKill', true);
      this.enemyBullets.setAll('checkWorldBounds', true);
 
+     this.createWave();
 
-     for (i = 0; i < 20; i++)
-     {
-       this.tanks.push(new Tank(i, this, this.tank, this.enemyBullets, game.world.randomX, game.world.randomY));
-     }
    },
    update:function(){
      this.timer += this.time.elapsed;
@@ -126,6 +123,8 @@
      this.land.tilePosition.x = -this.camera.x;
      this.land.tilePosition.y = -this.camera.y;
 
+     this.scoreTotal.text = score;
+
      if(this.tank.x < this.world.width - 300 || this.tank.x > 300 && this.tank.y < this.world.height - 300 || this.tank.y > 300){
        this.scoreText.x = this.tank.x +200;
        this.livesText.x = this.tank.x -300;
@@ -137,6 +136,8 @@
        this.timeText.y = this.tank.y - 250;
        this.timerText.x = this.tank.x;
        this.timerText.y = this.tank.y - 250;
+       this.scoreTotal.x = this.tank.x + 250;
+       this.scoreTotal.y = this.tank.y -300;
      }
 
 
@@ -166,6 +167,7 @@
    hitEnemy:function(tank, bullet){
      bullet.kill();
      this.tanks[tank.name]._kill();
+     this.score += 100;
    },
 
 
@@ -184,7 +186,10 @@
      this.lives.getChildAt(tank.life-1).loadTexture('nolive');
      tank.life--;
    },
-   newWave: function () {
-     this.Level = new Wave(this.wave, this.enemies*this.wave);
+   createWave: function () {
+     for (i = 0; i < 10; i++)
+     {
+       this.tanks.push(new Tank(i, this, this.tank, this.enemyBullets, game.world.randomX, game.world.randomY));
+     }
    }
-   };
+ };
