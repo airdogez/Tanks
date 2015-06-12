@@ -34,6 +34,7 @@ Tank.prototype._kill = function(){
     this.tank.kill();
     this.shadow.kill();
     this.turret.kill();
+    this.alive = false;
 };
 Tank.prototype.update = function(){
     this.shadow.x= this.tank.x;
@@ -41,7 +42,7 @@ Tank.prototype.update = function(){
     this.turret.x = this.tank.x;
     this.turret.y = this.tank.y;
     this.shadow.rotation = this.tank.rotation;
-    if(!this.player.is_dead){
+    if(!this.player.is_dead && this.alive){
         this.turret.rotation = this.game.physics.arcade.angleBetween(this.turret,this.player);
         if(this.game.physics.arcade.distanceBetween(this.tank, this.player) < 200){
             if(this.game.time.now > this.nextFire && 

@@ -1,10 +1,3 @@
-/*
- *TODO:
- **Make the game end
- **Add Time correctly
- **Add Enemy Waves
- */
-
  Game = function(game){
    this.speed =0;
    this.fireRate = 100;
@@ -15,7 +8,7 @@
    this.timer = null;
    this.score = 0;
    this.enemies = 10;
-   this.wave = 1;
+   this.waveEnemies = 10;
    this.Level = null;
  };
 
@@ -93,20 +86,23 @@
      this.enemyBullets.setAll('outOfBoundsKill', true);
      this.enemyBullets.setAll('checkWorldBounds', true);
 
-     this.createWave();
+     this.createWave(this.waveEnemies);
 
    },
    update:function(){
      this.timer += this.time.elapsed;
 
-     var minutes = Math.floor(this.timer / 10000);
-     var seconds = Math.floor((this.timer - minutes * 10000) / 10);
+     var minutes = Math.floor(this.timer / 60000) % 60;
+     var seconds = Math.floor(this.timer / 1000) % 60;
 
-     if (minutes < 0){
-       this.timerText.text = '00:00';
-     } else{
-       this.timerText.text = minutes + ':' + seconds;
+     if (minutes < 10){
+       minutes = '0' + minutes;
      }
+     if (seconds < 10){
+       seconds = '0' + seconds;
+     }
+
+     this.timerText.text = minutes + ':' + seconds;
 
      this.canon.rotation = this.physics.arcade.angleToPointer(this.canon);
      if(this.keys.left.isDown || this.input.keyboard.isDown(Phaser.Keyboard.A)){
@@ -143,6 +139,12 @@
      this.physics.arcade.overlap(this.enemyBullets, 
        this.tank,this.hitPlayer, null, this);
 
+     if(this.enemies === 0){
+       this.waveEnemies += 5;
+       this.createWave(this.waveEnemies);
+       this.enemies = this.waveEnemies;
+     }
+
    },
    hitPlayer:function(tank ,bullet){
      this.loseHeart(tank);
@@ -150,6 +152,8 @@
        tank.kill();
        this.canon.kill();
        tank.is_dead = true;
+       this.resetData();
+       this.state.clearCurrentState();
        this.state.start('GameOver');
        //this.shadow.kill();
      }
@@ -161,6 +165,7 @@
      bullet.kill();
      this.tanks[tank.name]._kill();
      this.score += 100;
+     this.enemies--;
    },
 
 
@@ -179,10 +184,14 @@
      this.lives.getChildAt(tank.life-1).loadTexture('nolive');
      tank.life--;
    },
-   createWave: function () {
-     for (i = 0; i < 10; i++)
+   createWave: function (enemies) {
+     for (i = 0; i < enemies; i++)
      {
        this.tanks.push(new Tank(i, this, this.tank, this.enemyBullets, game.world.randomX, game.world.randomY));
      }
+   },
+   resetData: function () {
+     this.score = 0;
+     this.timer = 0;
    }
  };
